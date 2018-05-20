@@ -5,6 +5,9 @@
 #-----------------------------------------------------------------------
 # (C)2001, Gustavo Scotti (gustavo@scotti.com)
 # (c) 2003 Marcus R. Brown <mrbrown@0xd6.org>
+#
+# Code formatting and commenting:  Jacob Pozaic (jacobpozaic@gmail.com)
+#
 # Licenced under Academic Free License version 2.0
 # Review ps2sdk README & LICENSE files for further details.
 */
@@ -21,8 +24,8 @@
 #include <stdarg.h>
 #include <sifdma.h>
 
-#define DI	DIntr
-#define EI	EIntr
+#define DI DIntr
+#define EI EIntr
 
 #define ExitHandler() asm volatile("sync\nei\n")
 
@@ -46,11 +49,11 @@
 #define ALIGNED(x) __attribute__((aligned((x))))
 
 /** Limits */
-#define MAX_THREADS	256	//A few will be used for the kernel patches.
+#define MAX_THREADS		256	//A few will be used for the kernel patches.
 #define MAX_SEMAPHORES	256	//A few will be used for the kernel patches.
 #define MAX_PRIORITY	128
 #define MAX_HANDLERS	128
-#define MAX_ALARMS	64
+#define MAX_ALARMS		 64
 
 /** Modes for FlushCache */
 #define WRITEBACK_DCACHE	0
@@ -73,21 +76,21 @@ enum
 	INTC_TIM0,
 	INTC_TIM1,
 	INTC_TIM2,
-//	INTC_TIM3,		//Reserved by the EE kernel for alarms (do not use)
+//	INTC_TIM3,			//Reserved by the EE kernel for alarms (do not use)
 	INTC_SFIFO = 13,	//Error encountered during SFIFO transfer
-	INTC_VU0WD		//VU0 WatchDog; ForceBreak is sent to VU0 if left in RUN state for extended periods of time.
+	INTC_VU0WD			//VU0 WatchDog; ForceBreak is sent to VU0 if left in RUN state for extended periods of time.
 };
 
 //For backward-compatibility
-#define kINTC_GS		INTC_GS
-#define kINTC_SBUS		INTC_SBUS
+#define kINTC_GS			INTC_GS
+#define kINTC_SBUS			INTC_SBUS
 #define kINTC_VBLANK_START	INTC_VBLANK_S
 #define kINTC_VBLANK_END	INTC_VBLANK_E
-#define kINTC_VIF0		INTC_VIF0
-#define kINTC_VIF1		INTC_VIF1
-#define kINTC_VU0		INTC_VU0
-#define kINTC_VU1		INTC_VU1
-#define kINTC_IPU		INTC_IPU
+#define kINTC_VIF0			INTC_VIF0
+#define kINTC_VIF1			INTC_VIF1
+#define kINTC_VU0			INTC_VU0
+#define kINTC_VU1			INTC_VU1
+#define kINTC_IPU			INTC_IPU
 #define kINTC_TIMER0		INTC_TIM0
 #define kINTC_TIMER1		INTC_TIM1
 
@@ -105,19 +108,19 @@ enum
 	DMAC_FROM_SPR,
 	DMAC_TO_SPR,
 
-	DMAC_CIS	= 13,	//Channel interrupt
-	DMAC_MEIS,		//MemFIFO empty interrupt
-	DMAC_BEIS,		//Bus error interrupt
+	DMAC_CIS = 13,		//Channel interrupt
+	DMAC_MEIS,			//MemFIFO empty interrupt
+	DMAC_BEIS,			//Bus error interrupt
 };
 
 /** ResetEE argument bits */
-#define INIT_DMAC               0x01
-#define INIT_VU1                0x02
-#define INIT_VIF1               0x04
-#define INIT_GIF                0x08
-#define INIT_VU0                0x10
-#define INIT_VIF0               0x20
-#define INIT_IPU                0x40
+#define INIT_DMAC	0x01
+#define INIT_VU1	0x02
+#define INIT_VIF1	0x04
+#define INIT_GIF	0x08
+#define INIT_VU0	0x10
+#define INIT_VIF0	0x20
+#define INIT_IPU	0x40
 
 static inline void nopdelay(void)
 {
@@ -194,51 +197,96 @@ static inline int ee_kmode_exit()
 
 typedef struct t_ee_sema
 {
-	int   count,
-	      max_count,
-	      init_count,
-	      wait_threads;
-	u32   attr,
-	      option;
+	int count,
+	    max_count,
+	    init_count,
+	    wait_threads;
+	u32 attr,
+	    option;
 } ee_sema_t;
 
+/**
+ * Container for parameters and information belonging to a thread.
+ * TODO: Determine use of gp_reg
+ * TODO: Determine use of attr
+ * TODO: Determine use of option
+ *
+ * status------> The current status of the Thread (See thread status values below).
+ * func--------> Pointer to a function that contains the code this thread will execute.
+ * stack-------> The memory location that will be used for the threads stack.
+ * stack_size--> The size of the space that has been allocated for the stack.
+ * gp_reg------> Points to a general purpose register, by defining 'extern void * _gp;' PS2SDK
+ *               probably takes care of it.  It also seems possible that the gp register is used
+ *               for alarms.
+ * initial_priority--> The priority that this thread started with when it was created.
+ * current_priority--> The priority that this thread currently has.
+ * attr--------> ?
+ * option------> (?) Do not use - officially documented to not work.
+ */
 typedef struct t_ee_thread
 {
-    int status; // 0x00
-    void *func; // 0x04
-    void *stack; // 0x08
-    int stack_size; // 0x0C
-    void *gp_reg; // 0x10
-    int initial_priority; // 0x14
-    int current_priority; // 0x18
-    u32 attr; // 0x1C
-    u32 option; // 0x20 Do not use - officially documented to not work.
+    int status; 			// 0x00
+    void *func; 			// 0x04
+    void *stack; 			// 0x08
+    int stack_size; 		// 0x0C
+    void *gp_reg; 			// 0x10
+    int initial_priority; 	// 0x14
+    int current_priority; 	// 0x18
+    u32 attr; 				// 0x1C
+    u32 option; 			// 0x20
 
 } ee_thread_t;
 
-/** Thread status */
-#define THS_RUN		0x01
-#define THS_READY	0x02
-#define THS_WAIT	0x04
-#define THS_SUSPEND	0x08
-#define THS_WAITSUSPEND	0x0c
-#define THS_DORMANT	0x10
+/**
+ * Thread status values.
+ */
+#define THS_RUN			0x01	// Thread is currently running.
+#define THS_READY		0x02	// Thread is ready to run and has been queued.
+#define THS_WAIT		0x04	// Thread is waiting? TODO: wait might mean that it is waiting on a semaphore.
+#define THS_SUSPEND		0x08	// Thread has been suspended.
+#define THS_WAITSUSPEND	0x0c	// Thread is waiting and suspended? TODO: figure out the semantics of this.
+#define THS_DORMANT		0x10	// Thread has not been started yet, has been exited, or has been terminated.
 
-// sizeof() == 0x30
+/**
+ * Container for polling thread information.
+ * TODO: Determine use of gp_reg
+ * TODO: Determine use of attr
+ * TODO: Determine use of option
+ *
+ * This is used by the SYSCALL:
+ *     ReferThreadStatus(s32 t_id, ee_thread_status_t *info)
+ *
+ * status------> The current status of the Thread (See thread status values below).
+ * func--------> Pointer to a function that contains the code this thread will execute.
+ * stack-------> The memory location that will be used for the threads stack.
+ * stack_size--> The size of the space that has been allocated for the stack.
+ * gp_reg------> Points to a general purpose register, by defining 'extern void * _gp;' PS2SDK
+ *               probably takes care of it.  It also seems possible that the gp register is used
+ *               for alarms.
+ * initial_priority--> The priority that this thread started with when it was created.
+ * current_priority--> The priority that this thread currently has.
+ * attr--------> ?
+ * option------> ?
+ * waitType----> ?
+ * waitId------> ?
+ * wakeupCount-> ?
+ *
+ * sizeof() == 0x30
+ */
 typedef struct t_ee_thread_status
 {
-    int status; // 0x00
-    void *func; // 0x04
-    void *stack; // 0x08
-    int stack_size; // 0x0C
-    void *gp_reg; // 0x10
-    int initial_priority; // 0x14
-    int current_priority; // 0x18
-    u32 attr; // 0x1C
-    u32 option; // 0x20
-    u32 waitType; // 0x24
-    u32 waitId; // 0x28
-    u32 wakeupCount; // 0x2C
+    int status; 			// 0x00
+    void *func; 			// 0x04
+    void *stack;			// 0x08
+    int stack_size; 		// 0x0C
+    void *gp_reg; 			// 0x10
+    int initial_priority; 	// 0x14
+    int current_priority; 	// 0x18
+    u32 attr; 				// 0x1C
+    u32 option; 			// 0x20
+    u32 waitType; 			// 0x24
+    u32 waitId; 			// 0x28
+    u32 wakeupCount; 		// 0x2C
 } ee_thread_status_t;
 
 #ifdef __cplusplus
@@ -246,12 +294,12 @@ extern "C" {
 #endif
 
 /* Initialization/deinitialization routines.  */
-void _InitSys(void);		//Run by crt0
+void _InitSys(void);			//Run by crt0
 
 void TerminateLibrary(void);	//Run by crt0
 
 /* Thread update functions */
-int InitThread(void);		//Run by _InitSys
+int InitThread(void);			//Run by _InitSys
 
 s32 iWakeupThread(s32 thread_id);
 s32 iRotateThreadReadyQueue(s32 priority);
@@ -267,13 +315,13 @@ void LoadExecPS2(const char *filename, s32 num_args, char *args[]) __attribute__
 void ExecOSD(int num_args, char *args[]) __attribute__((noreturn));
 
 /* Alarm update functions */
-void InitAlarm(void);		//Run by _InitSys
+void InitAlarm(void);			//Run by _InitSys
 
 /* libosd update functions */
-void InitExecPS2(void);		//ExecPS2 patch only. Run by _InitSys, Exit, LoadExecPS2, ExecPS2 and ExecOSD
-void InitOsd(void);		//ExecPS2 + System Configuration patches. Please refer to the comments within libosd_full.c
+void InitExecPS2(void);			//ExecPS2 patch only. Run by _InitSys, Exit, LoadExecPS2, ExecPS2 and ExecOSD
+void InitOsd(void);				//ExecPS2 + System Configuration patches. Please refer to the comments within libosd_full.c
 
-int PatchIsNeeded(void);	//Indicates whether the patch is required.
+int PatchIsNeeded(void);		//Indicates whether the patch is required.
 
 /* Glue routines.  */
 int DIntr(void);
@@ -363,7 +411,7 @@ s32	 iResumeThread(s32 thread_id);
 
 u8 RFU059(void);
 
-void * SetupThread(void * gp, void * stack, s32 stack_size, void * args, void * root_func);
+void * SetupThread(void * gp, void * stack, s32 stack_size, void * args, void * root_func); // Called in crt0.s, I think to setup the kernel thread?
 void SetupHeap(void * heap_start, s32 heap_size);
 void *EndOfHeap(void);
 

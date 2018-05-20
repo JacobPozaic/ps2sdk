@@ -14,12 +14,12 @@
 
 #include "kernel.h"
 
-struct request{
+struct request {
 	u8 mode;
 	u8 data;
 };
 
-enum TOP_REQ{
+enum TOP_REQ {
 	TOP_REQ_WAKEUP,
 	TOP_REQ_ROTATE,
 	TOP_REQ_SUSPEND
